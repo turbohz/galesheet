@@ -3,6 +3,12 @@
 open System
 open GraphicsGaleWrapper
 open System.IO
+open System.Drawing
+
+// serialize a bitmap as png
+let toFile (name : string) (bmp: Bitmap) =
+    bmp.Save(name, Imaging.ImageFormat.Png) |> ignore
+    bmp
 
 let showInfo (go:GaleObject) =
     let width = go.Width
@@ -15,7 +21,7 @@ let showInfo (go:GaleObject) =
 let main argv =
 
     printfn "GalSheet v0.1"
-
+    
     try
         let path =
             match (List.ofArray argv) with
@@ -24,6 +30,9 @@ let main argv =
 
         let go = new GaleObject(path)
         showInfo go
+        let bmp = go.Frames.[0].CreateBitmap()
+        let name = path + ".png"
+        toFile name bmp |> ignore
         0
     with
         | e ->  printfn "Error: %s" e.Message; 1
