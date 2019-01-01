@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <!-- <RuntimeIdentifiers>
+      linux-x64;win-x86
+    </RuntimeIdentifiers>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages> -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\\galefile\\galefile.csproj">
+      <Name>galefile.csproj</Name>
+      <!-- <Project>{25578a7e-4a35-44f5-9975-3f3e0bab0d3e}</Project> -->
+    </ProjectReference>
+    <Reference Include="GraphicsGaleWrapper" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+    <Content Include="assets\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- <ItemGroup>
+    <PackageReference Update="FSharp.Core, Culture=en-US" Version="4.3.4">
+      <Paket>True</Paket>
+    </PackageReference>
+  </ItemGroup> -->
+
+  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
+
+</Project>
