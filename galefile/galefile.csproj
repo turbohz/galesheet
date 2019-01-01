@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <AssemblyName>GraphicsGaleWrapper</AssemblyName>
     <UICulture>en-US</UICulture>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <Reference Include="System.Drawing.Common">
-      <HintPath>..\packages\System.Drawing.Common\lib\netstandard2.0\System.Drawing.Common.dll</HintPath>
+      <HintPath>..\packages\System.Drawing.Common\lib\net461\System.Drawing.Common.dll</HintPath>
       <Private>True</Private>
       <Paket>True</Paket>
     </Reference>

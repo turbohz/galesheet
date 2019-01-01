@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <!-- <RuntimeIdentifiers>
       linux-x64;win-x86
@@ -14,9 +14,13 @@
   <ItemGroup>
     <ProjectReference Include="..\\galefile\\galefile.csproj">
       <Name>galefile.csproj</Name>
-      <!-- <Project>{25578a7e-4a35-44f5-9975-3f3e0bab0d3e}</Project> -->
     </ProjectReference>
     <Reference Include="GraphicsGaleWrapper" />
+    <Reference Include="System.Drawing.Common">
+      <HintPath>..\packages\System.Drawing.Common\lib\net461\System.Drawing.Common.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket> 
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
