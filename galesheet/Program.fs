@@ -4,6 +4,7 @@ open System
 open GraphicsGaleWrapper
 open System.IO
 open System.Drawing
+open System.Drawing.Drawing2D
 
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
@@ -17,10 +18,15 @@ let showInfo (go:GaleObject) =
     printfn "Loaded %ix%i animation with %i frames" width height totalFrames
     ()
 
+let blitFrame (sheet:Graphics) (x:int) (frame:Frame) =
+    let bmp = frame.CreateBitmap()
+    sheet.DrawImage(bmp, x, 0, frame.Width, frame.Height) |> ignore
+    x + frame.Width
+
 [<EntryPoint>]
 let main argv =
 
-    printfn "GalSheet v0.1"
+    printfn "GalSheet v0.1"   
     
     try
         let path =
@@ -29,10 +35,21 @@ let main argv =
                 | _ -> failwith "A path is required"
 
         let go = new GaleObject(path)
+
         showInfo go
-        let bmp = go.Frames.[0].CreateBitmap()
-        let name = path + ".png"
-        toFile name bmp |> ignore
+
+        let sheet = new Bitmap(go.Width*go.FrameCount, go.Height)
+        
+        let gsheet = Graphics.FromImage(sheet)
+        gsheet.CompositingMode <- CompositingMode.SourceCopy
+        
+        go.Frames 
+            |> Array.fold (blitFrame gsheet) 0
+            |> ignore
+        
+        let name = path + ".sheet.png"
+
+        toFile name sheet |> ignore
         0
     with
         | e ->  printfn "Error: %s" e.Message; 1
