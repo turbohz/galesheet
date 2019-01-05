@@ -1,8 +1,6 @@
+RESTRICTION: == net461
 NUGET
   remote: https://www.nuget.org/api/v2
-    Microsoft.NETCore.Platforms (2.2) - restriction: >= netcoreapp2.0
-    Microsoft.Win32.SystemEvents (4.5) - restriction: >= netcoreapp2.0
-      Microsoft.NETCore.Platforms (>= 2.0) - restriction: >= netcoreapp2.0
+    FAKE (5.8.4)
+    FSharp.Core (4.5.4)
     System.Drawing.Common (4.5.1)
-      Microsoft.NETCore.Platforms (>= 2.0) - restriction: >= netcoreapp2.0
-      Microsoft.Win32.SystemEvents (>= 4.5) - restriction: >= netcoreapp2.0

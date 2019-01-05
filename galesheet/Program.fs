@@ -1,8 +1,6 @@
 ﻿// Learn more about F# at http://fsharp.org
 
-open System
 open GraphicsGaleWrapper
-open System.IO
 open System.Drawing
 open System.Drawing.Drawing2D
 
