@@ -4,6 +4,9 @@ open GraphicsGaleWrapper
 open System.Drawing
 open System.Drawing.Drawing2D
 
+open Fake.IO.Globbing.Operators
+open System.IO
+
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
     bmp.Save(name, Imaging.ImageFormat.Png) |> ignore
@@ -24,30 +27,37 @@ let blitFrame (sheet:Graphics) (x:int) (frame:Frame) =
 [<EntryPoint>]
 let main argv =
 
-    printfn "GalSheet v0.1"   
+    printfn "GalSheet v0.1"        
     
     try
         let path =
             match (List.ofArray argv) with
                 | path::_ -> path
-                | _ -> failwith "A path is required"
+                | _ -> failwith "A path/glob is required"
+                
+        let animations = !! path
 
-        let go = new GaleObject(path)
+        for file in animations do
 
-        showInfo go
+            printfn "File path: %s" file
 
-        let sheet = new Bitmap(go.Width*go.FrameCount, go.Height)
+            let go = new GaleObject(file)
+
+            showInfo go
+
+            let sheet = new Bitmap(go.Width*go.FrameCount, go.Height)
+    
+            let gsheet = Graphics.FromImage(sheet)
+            gsheet.CompositingMode <- CompositingMode.SourceCopy
+            
+            go.Frames 
+                |> Array.fold (blitFrame gsheet) 0
+                |> ignore
+            
+            let name = file + ".sheet.png"
+
+            toFile name sheet |> ignore
         
-        let gsheet = Graphics.FromImage(sheet)
-        gsheet.CompositingMode <- CompositingMode.SourceCopy
-        
-        go.Frames 
-            |> Array.fold (blitFrame gsheet) 0
-            |> ignore
-        
-        let name = path + ".sheet.png"
-
-        toFile name sheet |> ignore
         0
     with
         | e ->  printfn "Error: %s" e.Message; 1

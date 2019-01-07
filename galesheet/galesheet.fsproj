@@ -9,6 +9,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Runtime" />
+    <Reference Include="Fake" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\galefile\galefile.csproj">

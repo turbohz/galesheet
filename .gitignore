@@ -1,4 +1,7 @@
 **/bin/
 **/obj/
 packages/
+galesheet/assets/
 .paket/paket.exe
+.vs
+paket-files/paket.restore.cached

@@ -12,6 +12,16 @@
                 "reveal": "silent"
             },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run",
+            "command": "dotnet",
+            "args": ["run", "assets\\test\\*.gal"],
+            "options": {
+                "cwd": "${workspaceFolder}/galesheet"
+            },
+            "type": "shell",
+            "problemMatcher": []
         }
     ]
 }
