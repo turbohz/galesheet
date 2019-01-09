@@ -1,3 +1,4 @@
 System.Drawing.Common
 FSharp.Core
 Fake.Lib
+FParsec

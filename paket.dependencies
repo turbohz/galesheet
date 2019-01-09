@@ -2,5 +2,6 @@ source https://www.nuget.org/api/v2
 
 framework: net461
 nuget Fake.Lib
+nuget FParsec
 nuget FSharp.Core
 nuget System.Drawing.Common
