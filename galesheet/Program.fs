@@ -7,6 +7,9 @@ open System.Drawing.Drawing2D
 open Fake.IO.Globbing.Operators
 open System.IO
 
+[<Literal>]
+let VERSION = "0.1"
+
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
     bmp.Save(name, Imaging.ImageFormat.Png) |> ignore
@@ -27,7 +30,7 @@ let blitFrame (sheet:Graphics) (x:int) (frame:Frame) =
 [<EntryPoint>]
 let main argv =
 
-    printfn "GalSheet v0.1"        
+    printfn "GalSheet v%s" VERSION        
     
     try
         let path =
@@ -59,5 +62,6 @@ let main argv =
             toFile name sheet |> ignore
         
         0
+    
     with
         | e ->  printfn "Error: %s" e.Message; 1
