@@ -30,7 +30,7 @@ let blitFrame (sheet:Graphics) (x:int) (frame:Frame) =
 [<EntryPoint>]
 let main argv =
 
-    printfn "GalSheet v%s" VERSION        
+    printfn "GaleSheet v%s" VERSION        
     
     try
         let path =
