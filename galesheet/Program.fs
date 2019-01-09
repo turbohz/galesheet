@@ -5,6 +5,7 @@ open System.Drawing
 open System.Drawing.Drawing2D
 
 open Fake.IO.Globbing.Operators
+open Fake.Core
 open System.IO
 
 [<Literal>]
@@ -30,13 +31,27 @@ let blitFrame (sheet:Graphics) (x:int) (frame:Frame) =
 [<EntryPoint>]
 let main argv =
 
-    printfn "GaleSheet v%s" VERSION        
-    
+    //  command line uses http://docopt.org/
+
+    let doc = """
+GaleSheet: 
+    A tool to create sprite sheets from Graphics Gale .gal files
+
+Usage: 
+    galesheet <path>
+
+Options:
+    --version     Show version.
+"""
+
     try
-        let path =
-            match (List.ofArray argv) with
-                | path::_ -> path
-                | _ -> failwith "A path/glob is required"
+        let parser = Docopt(doc)
+        let parsedArguments = parser.Parse(argv)
+
+        let path = 
+            match parsedArguments.TryFind "<path>" with
+                | Some (DocoptResult.Argument path) -> path
+                | _ -> failwith "A path (or glob) is required"
                 
         let animations = !! path
 
@@ -64,4 +79,4 @@ let main argv =
         0
     
     with
-        | e ->  printfn "Error: %s" e.Message; 1
+        | e ->  printfn "%s" e.Message; printfn "%s" doc; 1

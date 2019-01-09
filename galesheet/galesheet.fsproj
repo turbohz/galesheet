@@ -10,6 +10,7 @@
     <Reference Include="System" />
     <Reference Include="System.Runtime" />
     <Reference Include="Fake" />
+    <Reference Include="FParsec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\galefile\galefile.csproj">
