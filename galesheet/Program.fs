@@ -11,6 +11,23 @@ open System.IO
 [<Literal>]
 let VERSION = "0.1"
 
+[<Literal>]
+let DOC = """
+GaleSheet: 
+    A tool to create sprite sheets from Graphics Gale .gal files
+
+Usage: 
+    galesheet [--width=<width>] <path>
+
+Options:
+    --version       Show version.
+    --width=<w>     Set sheet width [default: AUTO].
+"""
+
+type Width = 
+    | Auto
+    | Fixed of int
+
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
     bmp.Save(name, Imaging.ImageFormat.Png) |> ignore
@@ -33,26 +50,25 @@ let main argv =
 
     //  command line uses http://docopt.org/
 
-    let doc = """
-GaleSheet: 
-    A tool to create sprite sheets from Graphics Gale .gal files
-
-Usage: 
-    galesheet <path>
-
-Options:
-    --version     Show version.
-"""
+    let command = Docopt(DOC)
 
     try
-        let parser = Docopt(doc)
-        let parsedArguments = parser.Parse(argv)
+        
+        let parsedArguments = command.Parse(argv)
 
         let path = 
-            match parsedArguments.TryFind "<path>" with
-                | Some (DocoptResult.Argument path) -> path
+            match DocoptResult.tryGetArgument "<path>" parsedArguments with
+                | Some path -> path
                 | _ -> failwith "A path (or glob) is required"
                 
+        let width =  
+            match DocoptResult.tryGetArgument "--width" parsedArguments with
+                | Some "AUTO" | None -> Width.Auto
+                | Some w -> Width.Fixed (int w)
+
+        printfn "Arguments: %A" parsedArguments
+        printfn "Width: %A" width
+
         let animations = !! path
 
         for file in animations do
@@ -79,4 +95,4 @@ Options:
         0
     
     with
-        | e ->  printfn "%s" e.Message; printfn "%s" doc; 1
+        | e ->  printfn "%s" e.Message; printfn "%s" DOC; 1
