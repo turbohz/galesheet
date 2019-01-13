@@ -17,16 +17,24 @@ GaleSheet:
     A tool to create sprite sheets from Graphics Gale .gal files
 
 Usage: 
-    galesheet [--width=<width>] <path>
+    galesheet [--width=<width>] [--destination=<filename>] <path>
 
 Options:
-    --version       Show version.
-    --width=<w>     Set sheet width [default: AUTO].
+    --version                Show version.
+    --width=<width>          Set sheet width [default: AUTO].
+    --destination<filename>  Destination filename [default: spritesheet.png]
 """
+
+[<Literal>]
+let DEFAULT_DESTINATION = "spritesheet.png"
 
 type Width = 
     | Auto
     | Fixed of int
+
+type Destination = 
+    | Auto
+    | Filename of string
 
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
@@ -66,8 +74,13 @@ let main argv =
                 | Some "AUTO" | None -> Width.Auto
                 | Some w -> Width.Fixed (int w)
 
+        let destination =
+            match DocoptResult.tryGetArgument "--destination" parsedArguments with
+                | None -> failwith "Unexpected error: Destination filename should have a default"
+                | Some filename -> filename
+
         printfn "Arguments: %A" parsedArguments
-        printfn "Width: %A" width
+        
 
         let animations = !! path
 
@@ -87,10 +100,8 @@ let main argv =
             go.Frames 
                 |> Array.fold (blitFrame gsheet) 0
                 |> ignore
-            
-            let name = file + ".sheet.png"
 
-            toFile name sheet |> ignore
+            toFile destination sheet |> ignore
         
         0
     
