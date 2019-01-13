@@ -49,7 +49,10 @@ let showInfo (go:GaleObject) =
 let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
     if position.X + source.Width > destination.Width || position.Y + source.Height > destination.Height
         then 
-            Error "Unable to blit! Out of bounds"
+            let error = Error "Unable to blit! Out of bounds"
+            printfn "%A" error
+            error
+            
         else 
 
             for x in 0..(source.Width-1) do
@@ -60,11 +63,7 @@ let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
 
 let blitFrame (sheet:Bitmap) (x:int) (frame:Frame) =
     let bmp = frame.CreateBitmap()
-
-    match (blit bmp sheet (new Point(x,0))) with
-        | Error e -> printfn "%A" e
-        | Ok _ -> ()
-
+    blit bmp sheet (new Point(x,0)) |> ignore
     x + frame.Width
 
 [<EntryPoint>]
