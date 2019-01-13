@@ -96,13 +96,17 @@ let main argv =
         printfn "Arguments: %A" parsedArguments
         
 
-        let animations = !! path
+        let files = !! path
 
-        for file in animations do
+        let mutable strips = List.empty
+        let mutable max = 0
+        let mutable height = 0
+
+        for file in files do
 
             printfn "File path: %s" file
 
-            let go = new GaleObject(file)
+            use go = new GaleObject(file)
 
             showInfo go
 
@@ -112,8 +116,23 @@ let main argv =
                 |> Array.fold (blitFrame sheet) 0
                 |> ignore
 
-            toFile destination sheet |> ignore
-        
+            strips <- sheet::strips
+
+            if sheet.Width > max then max <- sheet.Width
+            if go.Height > height then height <- go.Height
+
+        if strips.IsEmpty then failwith "No files to process!"
+
+        let collage = new Bitmap(max, strips.Length*height)
+
+        strips
+            |> List.rev
+            |> List.iteri ( fun i b -> blit b collage (new Point(0,i*height)) |> ignore )
+            |> ignore
+
+        toFile destination collage |> ignore
+
+        // all done!
         0
     
     with
