@@ -2,11 +2,9 @@
 
 open GraphicsGaleWrapper
 open System.Drawing
-open System.Drawing.Drawing2D
 
 open Fake.IO.Globbing.Operators
 open Fake.Core
-open System.IO
 
 [<Literal>]
 let VERSION = "0.1"
@@ -48,9 +46,25 @@ let showInfo (go:GaleObject) =
     printfn "Loaded %ix%i animation with %i frames" width height totalFrames
     ()
 
-let blitFrame (sheet:Graphics) (x:int) (frame:Frame) =
+let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
+    if position.X + source.Width > destination.Width || position.Y + source.Height > destination.Height
+        then 
+            Error "Unable to blit! Out of bounds"
+        else 
+
+            for x in 0..(source.Width-1) do
+                for y in 0..(source.Height-1) do
+                    destination.SetPixel(position.X + x, position.Y + y, source.GetPixel(x,y))
+
+            Ok destination
+
+let blitFrame (sheet:Bitmap) (x:int) (frame:Frame) =
     let bmp = frame.CreateBitmap()
-    sheet.DrawImage(bmp, x, 0, frame.Width, frame.Height) |> ignore
+
+    match (blit bmp sheet (new Point(x,0))) with
+        | Error e -> printfn "%A" e
+        | Ok _ -> ()
+
     x + frame.Width
 
 [<EntryPoint>]
@@ -93,12 +107,9 @@ let main argv =
             showInfo go
 
             let sheet = new Bitmap(go.Width*go.FrameCount, go.Height)
-    
-            let gsheet = Graphics.FromImage(sheet)
-            gsheet.CompositingMode <- CompositingMode.SourceCopy
             
             go.Frames 
-                |> Array.fold (blitFrame gsheet) 0
+                |> Array.fold (blitFrame sheet) 0
                 |> ignore
 
             toFile destination sheet |> ignore
