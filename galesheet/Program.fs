@@ -46,20 +46,21 @@ let showInfo (go:GaleObject) =
     printfn "Loaded %ix%i animation with %i frames" width height totalFrames
     ()
 
-let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
-    if position.X + source.Width > destination.Width || position.Y + source.Height > destination.Height
-        then 
-            let error = Error "Unable to blit! Out of bounds"
-            printfn "%A" error
-            error
-            
-        else 
+let (|InBounds|_|) (inner:Size) (position:Point) (outer:Size) = 
+    if position.X + inner.Width > outer.Width || position.Y + inner.Height > outer.Height then Some () else None    
 
+let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
+    match source.Size with
+        | InBounds destination.Size position -> 
             for x in 0..(source.Width-1) do
                 for y in 0..(source.Height-1) do
                     destination.SetPixel(position.X + x, position.Y + y, source.GetPixel(x,y))
 
             Ok destination
+        | _  ->
+            let error = Error "Unable to blit! Out of bounds"
+            printfn "%A" error
+            error            
 
 let blitFrame (sheet:Bitmap) (x:int) (frame:Frame) =
     let bmp = frame.CreateBitmap()
