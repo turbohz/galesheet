@@ -1,5 +1,6 @@
 **/bin/
 **/obj/
+*.png
 packages/
 galesheet/assets/
 .vs
