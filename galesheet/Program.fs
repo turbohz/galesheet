@@ -103,7 +103,7 @@ let main argv =
 
         let mutable strips = List.empty
 
-        for file in files do
+        for file in Seq.rev files do
 
             printfn "File path: %s" file
 
@@ -133,7 +133,6 @@ let main argv =
         let sheet = new Bitmap(sheetWidth, sheetHeight)
 
         strips
-            |> List.rev
             |> List.fold (blitStrip sheet) 0
             |> ignore
 
