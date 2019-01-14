@@ -47,7 +47,7 @@ let showInfo (go:GaleObject) =
     ()
 
 let (|InBounds|_|) (inner:Size) (position:Point) (outer:Size) = 
-    if position.X + inner.Width > outer.Width || position.Y + inner.Height > outer.Height then Some () else None    
+    if position.X + inner.Width <= outer.Width && position.Y + inner.Height <= outer.Height then Some () else None    
 
 let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
     match source.Size with
@@ -82,24 +82,24 @@ let main argv =
         
         let parsedArguments = command.Parse(argv)
 
-        let path = 
+        let pathValue = 
             match DocoptResult.tryGetArgument "<path>" parsedArguments with
                 | Some path -> path
                 | _ -> failwith "A path (or glob) is required"
                 
-        let widthArg =  
+        let widthValue =  
             match DocoptResult.tryGetArgument "--width" parsedArguments with
                 | Some "AUTO" | None -> Width.Auto
                 | Some w -> Width.Fixed (int w)
 
-        let destination =
+        let destinationValue =
             match DocoptResult.tryGetArgument "--destination" parsedArguments with
                 | None -> failwith "Unexpected error: Destination filename should have a default"
                 | Some filename -> filename
 
         printfn "Arguments: %A" parsedArguments
 
-        let files = !! path
+        let files = !! pathValue
 
         let mutable strips = List.empty
 
@@ -122,7 +122,7 @@ let main argv =
         if strips.IsEmpty then failwith "No files to process!"
 
         let sheetWidth = 
-            match widthArg with 
+            match widthValue with 
                 | Width.Auto -> (strips |> List.maxBy (fun s -> s.Width)).Width
                 | Width.Fixed w -> w
         
@@ -136,7 +136,7 @@ let main argv =
             |> List.fold (blitStrip sheet) 0
             |> ignore
 
-        toFile destination sheet |> ignore
+        toFile destinationValue sheet |> ignore
 
         // all done!
         0
