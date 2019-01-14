@@ -67,6 +67,10 @@ let blitFrame (sheet:Bitmap) (x:int) (frame:Frame) =
     blit bmp sheet (new Point(x,0)) |> ignore
     x + frame.Width
 
+let blitStrip (sheet:Bitmap) (y:int) (strip:Bitmap) =
+    blit strip sheet (new Point(0,y)) |> ignore
+    y + strip.Height
+
 [<EntryPoint>]
 let main argv =
 
@@ -83,7 +87,7 @@ let main argv =
                 | Some path -> path
                 | _ -> failwith "A path (or glob) is required"
                 
-        let width =  
+        let widthArg =  
             match DocoptResult.tryGetArgument "--width" parsedArguments with
                 | Some "AUTO" | None -> Width.Auto
                 | Some w -> Width.Fixed (int w)
@@ -94,13 +98,10 @@ let main argv =
                 | Some filename -> filename
 
         printfn "Arguments: %A" parsedArguments
-        
 
         let files = !! path
 
         let mutable strips = List.empty
-        let mutable max = 0
-        let mutable height = 0
 
         for file in files do
 
@@ -110,27 +111,33 @@ let main argv =
 
             showInfo go
 
-            let sheet = new Bitmap(go.Width*go.FrameCount, go.Height)
+            let strip = new Bitmap(go.Width*go.FrameCount, go.Height)
             
             go.Frames 
-                |> Array.fold (blitFrame sheet) 0
+                |> Array.fold (blitFrame strip) 0
                 |> ignore
 
-            strips <- sheet::strips
-
-            if sheet.Width > max then max <- sheet.Width
-            if go.Height > height then height <- go.Height
+            strips <- strip::strips
 
         if strips.IsEmpty then failwith "No files to process!"
 
-        let collage = new Bitmap(max, strips.Length*height)
+        let sheetWidth = 
+            match widthArg with 
+                | Width.Auto -> (strips |> List.maxBy (fun s -> s.Width)).Width
+                | Width.Fixed w -> w
+        
+        let sheetHeight = strips |> List.sumBy (fun s -> s.Height)
+
+        printfn "Result sheet is %ix%i" sheetHeight sheetHeight
+
+        let sheet = new Bitmap(sheetWidth, sheetHeight)
 
         strips
             |> List.rev
-            |> List.iteri ( fun i b -> blit b collage (new Point(0,i*height)) |> ignore )
+            |> List.fold (blitStrip sheet) 0
             |> ignore
 
-        toFile destination collage |> ignore
+        toFile destination sheet |> ignore
 
         // all done!
         0
