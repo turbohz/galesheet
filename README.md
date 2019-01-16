@@ -21,7 +21,7 @@ Options:
 
 This tool makes use of the (oficial) library provided by HumanBalance.
 
-To compile this project, you must first download the library (Visit https://graphicsgale.com/us/download.html), unzip and put it in the `galefile/` folder.
+To compile this project, you must first [download](https://graphicsgale.com/us/download.html) the library, unzip and put it in the `galefile/` folder.
 
 > This project is tested to work with the latest available library version, which at this time is `ver.15.11.19`
 
