@@ -31,3 +31,11 @@ You will also need the **.NET** SDK, grab it from [here](https://dotnet.microsof
 ## Acknowledgements
 
 This tool also uses a C# wrapper to the `dll` provided by [SebaGames](https://twitter.com/sebagamesdev).
+
+## Contributing
+
+This tool has been created for a very particular need of mine, so it might not fit other use cases. Feature requests are **discouraged**.  
+
+You're free and encouraged to fork and adapt it to your needs, though.
+
+Bug reports and/or fixes are **welcome**.
