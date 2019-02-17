@@ -51,24 +51,24 @@ let (|InBounds|_|) (outer:Size) (position:Point) (inner:Size) =
 
 let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
     match source.Size with
-        | InBounds destination.Size position -> 
-            for x in 0..(source.Width-1) do
-                for y in 0..(source.Height-1) do
-                    destination.SetPixel(position.X + x, position.Y + y, source.GetPixel(x,y))
+    | InBounds destination.Size position -> 
+        for x in 0..(source.Width-1) do
+            for y in 0..(source.Height-1) do
+                destination.SetPixel(position.X + x, position.Y + y, source.GetPixel(x, y))
 
-            Ok destination
-        | _  ->
-            let error = Error "Unable to blit! Out of bounds"
-            printfn "%A" error
-            error            
+        Ok destination
+    | _  ->
+        let error = Error "Unable to blit! Out of bounds"
+        printfn "%A" error
+        error            
 
 let blitFrame (sheet:Bitmap) (x:int) (frame:Frame) =
     let bmp = frame.CreateBitmap()
-    blit bmp sheet (new Point(x,0)) |> ignore
+    blit bmp sheet (Point(x, 0)) |> ignore
     x + frame.Width
 
 let blitStrip (sheet:Bitmap) (y:int) (strip:Bitmap) =
-    blit strip sheet (new Point(0,y)) |> ignore
+    blit strip sheet (Point(0, y)) |> ignore
     y + strip.Height
 
 [<EntryPoint>]
@@ -84,18 +84,19 @@ let main argv =
 
         let pathValue = 
             match DocoptResult.tryGetArgument "<path>" parsedArguments with
-                | Some path -> path
-                | _ -> failwith "A path (or glob) is required"
+            | Some path -> path
+            | _ -> failwith "A path (or glob) is required"
                 
         let widthValue =  
             match DocoptResult.tryGetArgument "--width" parsedArguments with
-                | Some "AUTO" | None -> Width.Auto
-                | Some w -> Width.Fixed (int w)
+            | Some "AUTO"
+            | None -> Width.Auto
+            | Some w -> Width.Fixed (int w)
 
         let destinationValue =
             match DocoptResult.tryGetArgument "--destination" parsedArguments with
-                | None -> failwith "Unexpected error: Destination filename should have a default"
-                | Some filename -> filename
+            | None -> failwith "Unexpected error: Destination filename should have a default"
+            | Some filename -> filename
 
         printfn "Arguments: %A" parsedArguments
 
@@ -123,8 +124,8 @@ let main argv =
 
         let sheetWidth = 
             match widthValue with 
-                | Width.Auto -> (strips |> List.maxBy (fun s -> s.Width)).Width
-                | Width.Fixed w -> w
+            | Width.Auto -> (strips |> List.maxBy (fun s -> s.Width)).Width
+            | Width.Fixed w -> w
         
         let sheetHeight = strips |> List.sumBy (fun s -> s.Height)
 
@@ -136,10 +137,11 @@ let main argv =
             |> List.fold (blitStrip sheet) 0
             |> ignore
 
+        printfn "Saving: %s" destinationValue
         toFile destinationValue sheet |> ignore
 
         // all done!
         0
     
     with
-        | e ->  printfn "%s" e.Message; printfn "%s" DOC; 1
+    | e ->  printfn "%s" e.Message; printfn "%s" DOC; 1
