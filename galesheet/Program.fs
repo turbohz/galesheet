@@ -113,6 +113,7 @@ let main argv =
             showInfo go
 
             let strip = new Bitmap(go.Width*go.FrameCount, go.Height)
+            printfn "%A" strip.Size
             
             go.Frames 
                 |> Array.fold (blitFrame strip) 0
