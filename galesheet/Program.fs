@@ -20,7 +20,7 @@ Usage:
 Options:
     --version                Show version.
     --width=<width>          Set sheet width [default: AUTO].
-    --destination<filename>  Destination filename [default: spritesheet.png]
+    --destination=<filename>  Destination filename [default: spritesheet.png]
 """
 
 [<Literal>]
