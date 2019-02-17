@@ -130,7 +130,7 @@ let main argv =
         
         let sheetHeight = strips |> List.sumBy (fun s -> s.Height)
 
-        printfn "Result sheet is %ix%i" sheetHeight sheetHeight
+        printfn "Result sheet is %ix%i" sheetWidth sheetHeight
 
         let sheet = new Bitmap(sheetWidth, sheetHeight)
 
