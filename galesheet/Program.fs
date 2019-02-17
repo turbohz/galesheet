@@ -34,6 +34,38 @@ type Destination =
     | Auto
     | Filename of string
 
+module BitColor =
+
+    // color conversion and printing functions
+
+    let toHexDigit (ui:uint32) =
+        if ui < 10u then char (ui + 0x30u) else char (ui + 0x37u)
+
+    let byte2Hex (b:byte) =
+        let ui = uint32 b
+        let upper i = i &&& 0xF0u >>> 4 |> toHexDigit |> string
+        let lower i = i &&& 0x0Fu >>> 0 |> toHexDigit |> string
+        (upper ui) + (lower ui)
+
+    let int2Hex i =
+        let ui = uint32 i
+        [
+            ui &&& 0xFF000000u >>> 24 ;
+            ui &&& 0x00FF0000u >>> 16 ;
+            ui &&& 0x0000FF00u >>> 08 ;
+            ui &&& 0x000000FFu >>> 00 ;
+            
+        ] |> List.map (byte >> byte2Hex) |> List.reduce (+)
+
+    let color2hex (c:Color) =
+        [c.R; c.G; c.B; c.A ]
+        |> List.map byte2Hex
+        |> List.reduce (+)
+
+    let makeOpaque (c:Color) : Color = Color.FromArgb (c.ToArgb() ||| 0xFF000000)
+
+open BitColor
+
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
     bmp.Save(name, Imaging.ImageFormat.Png) |> ignore
