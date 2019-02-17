@@ -46,7 +46,7 @@ let showInfo (go:GaleObject) =
     printfn "Loaded %ix%i animation with %i frames" width height totalFrames
     ()
 
-let (|InBounds|_|) (inner:Size) (position:Point) (outer:Size) = 
+let (|InBounds|_|) (outer:Size) (position:Point) (inner:Size) = 
     if position.X + inner.Width <= outer.Width && position.Y + inner.Height <= outer.Height then Some () else None    
 
 let blit (source:Bitmap) (destination:Bitmap) (position:Point) =
