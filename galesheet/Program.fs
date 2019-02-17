@@ -75,7 +75,8 @@ let showInfo (go:GaleObject) =
     let width = go.Width
     let height = go.Height
     let totalFrames = go.FrameCount
-    printfn "Loaded %ix%i animation with %i frames" width height totalFrames
+    let bgColor = go.BackgroundColor |> int2Hex
+    printfn "Loaded %ix%i animation with %i frames (Background: #%s)" width height totalFrames bgColor
     ()
 
 let (|InBounds|_|) (outer:Size) (position:Point) (inner:Size) = 
