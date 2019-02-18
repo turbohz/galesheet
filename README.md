@@ -36,6 +36,21 @@ To compile this project, you must first [download](https://graphicsgale.com/us/d
 
 You will also need the **.NET** SDK, grab it from [here](https://dotnet.microsoft.com/learn/dotnet/hello-world-tutorial).
 
+## QA
+
+Q: Okay, got it compiled. How do I use it?
+
+A: This is how I use it.
+ It might not be the best way, my Windows knowlegde is limited.
+
+1. Go to the `galesheet\bin\Debug\net461` directory
+1. Right click on `galesheet.exe` and `Create shortcut`
+1. Move the shortcut `.lnk` to somewhere so its in the Windows %PATH%
+1. Create a `.bat` file in a folder containing your animations like this one:
+    ```bat
+    galesheet.exe.lnk --destination="%CD%\spritesheet.png" "%CD%\*.gal"
+    ```
+1. Double click on it to begin the process
 
 ## Acknowledgements
 
