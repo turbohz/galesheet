@@ -82,24 +82,49 @@ let showInfo (go:GaleObject) =
 let (|InBounds|_|) (outer:Size) (position:Point) (inner:Size) = 
     if position.X + inner.Width <= outer.Width && position.Y + inner.Height <= outer.Height then Some () else None    
 
-let blit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color option) =
+type BlitSource = 
+    | BlitSource of Bitmap * Color option
     
-    let left = position.X
-    let top = position.Y
-    let maxX = source.Width-1
-    let maxY = source.Height-1
+    member self.BgColor = 
+        match self with
+        | BlitSource (_,bgcolor) -> bgcolor
 
-    let skipPixel p = bgColor.IsSome && bgColor.Value.Equals p
+    member self.Bitmap = 
+        match self with
+        | BlitSource (bitmap,_) -> bitmap
+
+type BlitDestination = 
+    | BlitDestination of Bitmap * Point
+    
+    member self.Position = 
+        match self with
+        | BlitDestination (_,point) -> point
+
+    member self.Bitmap = 
+        match self with
+        | BlitDestination (bitmap,_) -> bitmap
+
+let blit (source:BlitSource) (destination:BlitDestination) =
+    
+    let left = destination.Position.X
+    let top = destination.Position.Y
+    let maxX = source.Bitmap.Width-1
+    let maxY = source.Bitmap.Height-1
+    let bgcolor = source.BgColor
+    let sourceBmp = source.Bitmap
+    let destBmp = destination.Bitmap
+
+    let inline skipPixel p = bgcolor.IsSome && bgcolor.Value.Equals p
     
     for x in 0..maxX do
         for y in 0..maxY do 
-            let pixel = source.GetPixel(x, y)
-            if skipPixel pixel then () else destination.SetPixel(left + x, top + y, pixel)
+            let pixel = sourceBmp.GetPixel(x, y)
+            if skipPixel pixel then () else destBmp.SetPixel(left + x, top + y, pixel)
 
-let tryBlit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color option) =
-    match source.Size with
-    | InBounds destination.Size position -> 
-        blit source destination position bgColor
+let tryBlit (source:BlitSource) (destination:BlitDestination) =
+    match source.Bitmap.Size with
+    | InBounds destination.Bitmap.Size destination.Position -> 
+        blit source destination
         Ok destination
     | _  ->
         let error = Error "Unable to blit! Out of bounds"
@@ -107,12 +132,15 @@ let tryBlit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color
         error
 
 let blitFrame (sheet:Bitmap) (bgcolor:Color) (x:int) (frame:Frame) =
-    let bmp = frame.CreateBitmap()
-    tryBlit bmp sheet (Point(x, 0)) (Some bgcolor) |> ignore
+    let source = BlitSource (frame.CreateBitmap(), Some bgcolor)
+    let destination = BlitDestination (sheet, Point(x, 0))
+    tryBlit source destination |> ignore
     x + frame.Width
 
 let blitStrip (sheet:Bitmap) (y:int) (strip:Bitmap) =
-    tryBlit strip sheet (Point(0, y)) None |> ignore
+    let source = BlitSource (strip, None)
+    let destination = BlitDestination (sheet, Point(0, y))
+    tryBlit source destination |> ignore
     y + strip.Height
 
 [<EntryPoint>]
