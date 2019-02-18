@@ -83,11 +83,18 @@ let (|InBounds|_|) (outer:Size) (position:Point) (inner:Size) =
     if position.X + inner.Width <= outer.Width && position.Y + inner.Height <= outer.Height then Some () else None    
 
 let blit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color option) =
-    for x in 0..(source.Width-1) do
-        for y in 0..(source.Height-1) do 
+    
+    let left = position.X
+    let top = position.Y
+    let maxX = source.Width-1
+    let maxY = source.Height-1
+
+    let skipPixel p = bgColor.IsSome && bgColor.Value.Equals p
+    
+    for x in 0..maxX do
+        for y in 0..maxY do 
             let pixel = source.GetPixel(x, y)
-            if bgColor.IsNone || not (bgColor.Value.Equals pixel) then  
-                destination.SetPixel(position.X + x, position.Y + y, pixel)
+            if skipPixel pixel then () else destination.SetPixel(left + x, top + y, pixel)
 
 let tryBlit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color option) =
     match source.Size with
