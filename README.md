@@ -1,6 +1,6 @@
 # GaleSheet
 
-A tool to convert a [Graphics Gale](https://graphicsgale.com/us/) animation to an sprite sheet.
+A tool to convert a [Graphics Gale](https://graphicsgale.com/us/) animation to a sprite sheet.
 
 ## Usage
 
@@ -14,8 +14,17 @@ Usage:
 Options:
     --version                Show version.
     --width=<width>          Set sheet width [default: AUTO].
-    --destination<filename>  Destination filename [default: spritesheet.png]
+    --destination=<filename> Destination filename [default: spritesheet.png]
 ```
+
+This tool will take a number of `.gal` (as many as the glob pattern matches), and generate
+a single `.png` sprite sheet, with each `.gal` animation being an horizontal stripe.
+
+It will also make the `.gal` animation backgroud color transparent.
+
+In `--width=AUTO` mode, the sprite sheet will be made as wide as the longest animation strip.
+
+> At the moment, no other file is generated, so data such as timing, and frame coordinates, indexes, filenames, are not exported.
 
 ## Build requirements
 
@@ -34,7 +43,7 @@ This tool also uses a C# wrapper to the `dll` provided by [SebaGames](https://tw
 
 ## Contributing
 
-This tool has been created for a very particular need of mine, so it might not fit other use cases. Feature requests are **discouraged**.  
+This tool has been created for a very particular, personal need, so it might not fit other use cases. Feature requests are **discouraged**.  
 
 You're free and encouraged to fork and adapt it to your needs, though.
 
