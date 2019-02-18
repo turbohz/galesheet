@@ -83,16 +83,16 @@ let (|InBounds|_|) (outer:Size) (position:Point) (inner:Size) =
     if position.X + inner.Width <= outer.Width && position.Y + inner.Height <= outer.Height then Some () else None    
 
 let blit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color option) =
-    
+    for x in 0..(source.Width-1) do
+        for y in 0..(source.Height-1) do 
+            let pixel = source.GetPixel(x, y)
+            if bgColor.IsNone || not (bgColor.Value.Equals pixel) then  
+                destination.SetPixel(position.X + x, position.Y + y, pixel)
+
+let tryBlit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color option) =
     match source.Size with
     | InBounds destination.Size position -> 
-
-        for x in 0..(source.Width-1) do
-            for y in 0..(source.Height-1) do 
-                let pixel = source.GetPixel(x, y)
-                if bgColor.IsNone || not (bgColor.Value.Equals pixel) then  
-                    destination.SetPixel(position.X + x, position.Y + y, pixel)
-
+        blit source destination position bgColor
         Ok destination
     | _  ->
         let error = Error "Unable to blit! Out of bounds"
@@ -101,14 +101,12 @@ let blit (source:Bitmap) (destination:Bitmap) (position:Point) (bgColor:Color op
 
 let blitFrame (sheet:Bitmap) (bgcolor:Color) (x:int) (frame:Frame) =
     let bmp = frame.CreateBitmap()
-    blit bmp sheet (Point(x, 0)) (Some bgcolor) |> ignore
+    tryBlit bmp sheet (Point(x, 0)) (Some bgcolor) |> ignore
     x + frame.Width
 
 let blitStrip (sheet:Bitmap) (y:int) (strip:Bitmap) =
-    blit strip sheet (Point(0, y)) None |> ignore
+    tryBlit strip sheet (Point(0, y)) None |> ignore
     y + strip.Height
-
-
 
 [<EntryPoint>]
 let main argv =
