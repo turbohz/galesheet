@@ -2,6 +2,7 @@
 **/obj/
 *.png
 packages/
+nupkgs/
 galesheet/assets/
 .vs
 paket-files/paket.restore.cached
