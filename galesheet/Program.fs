@@ -58,7 +58,7 @@ module BitColor =
         ] |> List.map (byte >> byte2Hex) |> List.reduce (+)
 
     let color2hex (c:Color) =
-        [c.R; c.G; c.B; c.A ]
+        [ c.A; c.R; c.G; c.B; ]
         |> List.map byte2Hex
         |> List.reduce (+)
 
