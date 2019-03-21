@@ -4,5 +4,5 @@ NUGET
     FAKE.Lib (5.8.4)
     FParsec (1.0.3)
       FSharp.Core (>= 4.0.0.1)
-    FSharp.Core (4.5.4)
+    FSharp.Core (4.6.2)
     System.Drawing.Common (4.5.1)
