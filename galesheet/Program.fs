@@ -15,12 +15,13 @@ GaleSheet:
     A tool to create sprite sheets from Graphics Gale .gal files
 
 Usage: 
-    galesheet [--width=<width>] [--destination=<filename>] <path>
+    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] <path>
 
 Options:
-    --version                Show version.
-    --width=<width>          Set sheet width [default: AUTO].
-    --destination=<filename>  Destination filename [default: spritesheet.png]
+    --version                 Show version.
+    --width=<width>           Set sheet width [default: AUTO].
+    --palette=<colors>        Convert to "palette" image [default: none].
+    --destination=<filename>  Destination filename [default: spritesheet.png].
 """
 
 [<Literal>]
@@ -33,6 +34,10 @@ type Width =
 type Destination = 
     | Auto
     | Filename of string
+
+type ColorFormat =
+    | FullColor
+    | Palette of uint8
 
 module BitColor =
 
@@ -65,6 +70,7 @@ module BitColor =
     let makeOpaque (c:Color) : Color = Color.FromArgb (c.ToArgb() ||| 0xFF000000)
 
 open BitColor
+open System
 
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
@@ -169,6 +175,15 @@ let main argv =
             match DocoptResult.tryGetArgument "--destination" parsedArguments with
             | None -> failwith "Unexpected error: Destination filename should have a default"
             | Some filename -> filename
+
+        let paletteValue =
+            match DocoptResult.tryGetArgument "--palette" parsedArguments with
+            | None -> failwith "Unexpected error: Palette option should have a default"
+            | Some "none" -> FullColor
+            | Some value -> 
+                match Byte.TryParse(value) with
+                | true, v    -> Palette v
+                | false, _   -> failwith "Argument error! Palette should be: 1 <= colors <= 256"
 
         printfn "Arguments: %A" parsedArguments
 
