@@ -20,7 +20,7 @@ Usage:
 Options:
     --version                 Show version.
     --width=<width>           Set sheet width [default: AUTO].
-    --palette=<colors>        Convert to "palette" image [default: none].
+    --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
 """
 
@@ -71,6 +71,8 @@ module BitColor =
 
 open BitColor
 open System
+open System.Drawing.Imaging
+open Microsoft.FSharp.NativeInterop
 
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
@@ -121,11 +123,52 @@ let blit (source:BlitSource) (destination:BlitDestination) =
     let destBmp = destination.Bitmap
 
     let inline skipPixel p = bgcolor.IsSome && bgcolor.Value.Equals p
-    
-    for x in 0..maxX do
-        for y in 0..maxY do 
-            let pixel = sourceBmp.GetPixel(x, y)
-            if skipPixel pixel then () else destBmp.SetPixel(left + x, top + y, pixel)
+
+    printfn "Pixel Format:%A" source.Bitmap.PixelFormat
+
+    match source.Bitmap.PixelFormat with
+        | PixelFormat.Format32bppArgb | PixelFormat.Format24bppRgb ->
+   
+            for x in 0..maxX do
+                for y in 0..maxY do 
+                    
+                    let pixel = sourceBmp.GetPixel(x, y)
+                    if skipPixel pixel then () else destBmp.SetPixel(left + x, top + y, pixel)
+
+        | PixelFormat.Format8bppIndexed ->
+            let palette = sourceBmp.Palette.Entries
+            // let bounds = sourceBmp.GetBounds(ref GraphicsUnit.Pixel)
+            let bounds = Rectangle(0,0,sourceBmp.Width,sourceBmp.Height)
+            let bmpData = sourceBmp.LockBits(bounds, ImageLockMode.ReadOnly, source.Bitmap.PixelFormat)
+            // If stride is negative, is because the image is upside down!
+            // It also means that Scan0 gives you the addr of the last row!
+            // If we want to marshall copy we must find the actual start of
+            // the data, which is h-1 * stride before the scan0
+            // See thread: https://stackoverflow.com/questions/6835006/how-can-i-copy-the-pixel-data-from-a-bitmap-with-negative-stride
+            let addr = bmpData.Scan0
+            let mutable ptr = NativePtr.ofNativeInt<uint8> addr
+            ptr <- NativePtr.add ptr ((sourceBmp.Height-1)*bmpData.Stride)
+            
+            let stride = abs(bmpData.Stride)
+            printfn "Stride:%A" stride
+            let bytes = (stride * bmpData.Height)
+            // Declare an array to hold the bytes of the bitmap.
+            let values:uint8[] =  Array.zeroCreate<uint8> bytes
+
+            // Copy the RGB values into the array.
+            System.Runtime.InteropServices.Marshal.Copy(ptr |> NativePtr.toNativeInt , values, 0, bytes);
+
+            sourceBmp.UnlockBits bmpData
+
+            values |> Array.iteri (fun i v -> 
+                // remember that the rows in values are from bottom to top
+                let x = left + i % stride
+                let y = top + maxY - (i / stride)
+                // read actual from palette, set BLUE component to the palette index
+                let c = Color.FromArgb(int palette.[int v].R, int palette.[int v].G, int v)
+                destBmp.SetPixel(x,y,c)
+            ) |> ignore
+        | unsupported -> failwithf "Unsupported PixelFormat %A" unsupported
 
 let tryBlit (source:BlitSource) (destination:BlitDestination) =
     match source.Bitmap.Size with
@@ -159,6 +202,7 @@ let main argv =
     try
         
         let parsedArguments = command.Parse(argv)
+        printfn "Arguments: %A" parsedArguments
 
         let pathValue = 
             match DocoptResult.tryGetArgument "<path>" parsedArguments with
@@ -185,11 +229,10 @@ let main argv =
                 | true, v    -> Palette v
                 | false, _   -> failwith "Argument error! Palette should be: 1 <= colors <= 256"
 
-        printfn "Arguments: %A" parsedArguments
-
         let files = !! pathValue
 
         let mutable strips = List.empty
+        let mutable palette = Array.zeroCreate<Color> 0
 
         for file in Seq.rev files do
 
@@ -204,11 +247,26 @@ let main argv =
             
             let bgColor = go.BackgroundColor |> Color.FromArgb |> makeOpaque
 
+            // convert frames to strips
+
             go.Frames 
                 |> Array.fold (blitFrame strip bgColor) 0
                 |> ignore
 
             strips <- strip::strips
+
+            // save palette, if needed
+            
+            let frame = go.Frames.[0]
+
+            match (Array.isEmpty palette, paletteValue) with
+            | (true, ColorFormat.Palette size) ->
+                if not go.SinglePalette then failwith "Palette animations must have a single palette!"
+                try palette <- (go.Palette.Entries |> Array.take (int size))
+                with | e ->  failwith "Unable to extract palette!"
+                ()
+            | _ -> ()
+            |> ignore
 
         if strips.IsEmpty then failwith "No files to process!"
 
@@ -229,6 +287,16 @@ let main argv =
 
         printfn "Saving: %s" destinationValue
         toFile destinationValue sheet |> ignore
+
+        // print palette
+
+        if not (Array.isEmpty palette) then
+            printfn "Palette:"
+            palette |>  Array.map color2hex |> Array.iteri (fun i v -> printfn "%i : %s" i v)
+
+        // save palette
+        
+        // TODO
 
         // all done!
         0
