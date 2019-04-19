@@ -9,12 +9,13 @@ GaleSheet:
     A tool to create sprite sheets from Graphics Gale .gal files
 
 Usage: 
-    galesheet [--width=<width>] [--destination=<filename>] <path>
+    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] <path>
 
 Options:
-    --version                Show version.
-    --width=<width>          Set sheet width [default: AUTO].
-    --destination=<filename> Destination filename [default: spritesheet.png]
+    --version                 Show version.
+    --width=<width>           Set sheet width [default: AUTO].
+    --palette=<colors>        Save "palette" data of the given size [default: none].
+    --destination=<filename>  Destination filename [default: spritesheet.png].
 ```
 
 This tool will take a number of `.gal` (as many as the glob pattern matches), and generate
@@ -35,6 +36,19 @@ To compile this project, you must first [download](https://graphicsgale.com/us/d
 > This project is tested to work with the latest available library version, which at this time is `ver.15.11.19`
 
 You will also need the **.NET** SDK, grab it from [here](https://dotnet.microsoft.com/learn/dotnet/hello-world-tutorial).
+
+## Using `galesheet`
+
+The program accepts multiple `.gal` files, in the **same** format.
+
+- 24 bits per pixel (full color)
+- 8 bits per pixel (palette)
+
+In both cases, the output is 32 bpp `.png` file.
+In the former, the background color will be made **transparent**.
+In the latter, the palette **index** will be the stored in the BLUE component.
+
+> The idea is that you'll use some kind of pixel shader to adjust the pixels to the right color
 
 ## QA
 
