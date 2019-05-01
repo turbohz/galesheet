@@ -5,6 +5,7 @@
     <TargetFramework>net461</TargetFramework>
     <UICulture>en-US</UICulture>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <NoWarn>9</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
