@@ -7,7 +7,7 @@ open Fake.IO.Globbing.Operators
 open Fake.Core
 
 [<Literal>]
-let VERSION = "0.1"
+let VERSION = "0.2"
 
 [<Literal>]
 let DOC = """
