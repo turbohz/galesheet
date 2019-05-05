@@ -14,7 +14,8 @@ let DOC = """
 GaleSheet: 
     A tool to create sprite sheets from Graphics Gale .gal files
 
-Usage: 
+Usage:
+    galesheet [--version]
     galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] <path>
 
 Options:
@@ -203,6 +204,10 @@ let main argv =
         
         let parsedArguments = command.Parse(argv)
         printfn "Arguments: %A" parsedArguments
+
+        let showVersion =  DocoptResult.hasFlag "--version" parsedArguments
+        
+        if showVersion then failwith (sprintf "%s" VERSION)
 
         let pathValue = 
             match DocoptResult.tryGetArgument "<path>" parsedArguments with
