@@ -113,6 +113,55 @@ type BlitDestination =
         match self with
         | BlitDestination (bitmap,_) -> bitmap
 
+let tryConvertBitmapToRGB (originalBmp:Bitmap) : Bitmap =
+
+    match originalBmp.PixelFormat with
+    | PixelFormat.Format32bppArgb | PixelFormat.Format24bppRgb -> originalBmp
+    | PixelFormat.Format8bppIndexed ->
+
+        // map data to an array. We can't use GetPixel() because it 
+        // returns a color, not the palette index value :(
+
+        let convertedBmp = new Bitmap(originalBmp.Width, originalBmp.Height, PixelFormat.Format32bppRgb)
+        let bounds = Rectangle(0,0,originalBmp.Width,originalBmp.Height)
+        let maxY = bounds.Bottom-1
+        let bmpData = originalBmp.LockBits(bounds, ImageLockMode.ReadOnly, originalBmp.PixelFormat)
+
+        // If stride is negative, is because the image is upside down!
+        // It also means that Scan0 gives you the addr of the last row!
+        // If we want to marshall copy we must find the actual start of
+        // the data, which is h-1 * stride before the scan0
+        // See thread: https://stackoverflow.com/questions/6835006/how-can-i-copy-the-pixel-data-from-a-bitmap-with-negative-stride
+        
+        let addr = bmpData.Scan0
+        let mutable ptr = NativePtr.ofNativeInt<uint8> addr
+        ptr <- NativePtr.add ptr ((originalBmp.Height-1)*bmpData.Stride)
+        
+        let stride = abs(bmpData.Stride)
+        let bytes = stride * bmpData.Height
+        let values:uint8[] =  Array.zeroCreate<uint8> bytes
+        System.Runtime.InteropServices.Marshal.Copy(ptr |> NativePtr.toNativeInt , values, 0, bytes);
+        originalBmp.UnlockBits bmpData
+        
+        let palette = originalBmp.Palette.Entries
+
+        values |> Array.iteri (fun i v -> 
+            // remember, the rows in values are from bottom to top
+            let x = i % stride
+            let y = maxY - (i / stride)
+            // use BLUE component to store the palette index value
+            // set REST of components to their color value from palette 
+            let c = Color.FromArgb(int palette.[int v].R, int palette.[int v].G, int v)
+            try 
+                convertedBmp.SetPixel(x,y,c)
+            with 
+                e -> printfn "SetPixel failed for: %i %i" x y |> ignore
+        ) |> ignore
+
+        convertedBmp
+
+    | unsupported -> failwithf "Unsupported PixelFormat %A" unsupported
+
 let blit (source:BlitSource) (destination:BlitDestination) =
     
     let left = destination.Position.X
@@ -125,51 +174,10 @@ let blit (source:BlitSource) (destination:BlitDestination) =
 
     let inline skipPixel p = bgcolor.IsSome && bgcolor.Value.Equals p
 
-    printfn "Pixel Format:%A" source.Bitmap.PixelFormat
-
-    match source.Bitmap.PixelFormat with
-        | PixelFormat.Format32bppArgb | PixelFormat.Format24bppRgb ->
-   
-            for x in 0..maxX do
-                for y in 0..maxY do 
-                    
-                    let pixel = sourceBmp.GetPixel(x, y)
-                    if skipPixel pixel then () else destBmp.SetPixel(left + x, top + y, pixel)
-
-        | PixelFormat.Format8bppIndexed ->
-            let palette = sourceBmp.Palette.Entries
-            // let bounds = sourceBmp.GetBounds(ref GraphicsUnit.Pixel)
-            let bounds = Rectangle(0,0,sourceBmp.Width,sourceBmp.Height)
-            let bmpData = sourceBmp.LockBits(bounds, ImageLockMode.ReadOnly, source.Bitmap.PixelFormat)
-            // If stride is negative, is because the image is upside down!
-            // It also means that Scan0 gives you the addr of the last row!
-            // If we want to marshall copy we must find the actual start of
-            // the data, which is h-1 * stride before the scan0
-            // See thread: https://stackoverflow.com/questions/6835006/how-can-i-copy-the-pixel-data-from-a-bitmap-with-negative-stride
-            let addr = bmpData.Scan0
-            let mutable ptr = NativePtr.ofNativeInt<uint8> addr
-            ptr <- NativePtr.add ptr ((sourceBmp.Height-1)*bmpData.Stride)
-            
-            let stride = abs(bmpData.Stride)
-            printfn "Stride:%A" stride
-            let bytes = (stride * bmpData.Height)
-            // Declare an array to hold the bytes of the bitmap.
-            let values:uint8[] =  Array.zeroCreate<uint8> bytes
-
-            // Copy the RGB values into the array.
-            System.Runtime.InteropServices.Marshal.Copy(ptr |> NativePtr.toNativeInt , values, 0, bytes);
-
-            sourceBmp.UnlockBits bmpData
-
-            values |> Array.iteri (fun i v -> 
-                // remember that the rows in values are from bottom to top
-                let x = left + i % stride
-                let y = top + maxY - (i / stride)
-                // read actual from palette, set BLUE component to the palette index
-                let c = Color.FromArgb(int palette.[int v].R, int palette.[int v].G, int v)
-                destBmp.SetPixel(x,y,c)
-            ) |> ignore
-        | unsupported -> failwithf "Unsupported PixelFormat %A" unsupported
+    for x in 0..maxX do
+        for y in 0..maxY do
+            let pixel = sourceBmp.GetPixel(x, y)
+            if not (skipPixel pixel) then destBmp.SetPixel(left + x, top + y, pixel) |> ignore
 
 let tryBlit (source:BlitSource) (destination:BlitDestination) =
     match source.Bitmap.Size with
@@ -182,7 +190,8 @@ let tryBlit (source:BlitSource) (destination:BlitDestination) =
         error
 
 let blitFrame (sheet:Bitmap) (bgcolor:Color) (x:int) (frame:Frame) =
-    let source = BlitSource (frame.CreateBitmap(), Some bgcolor)
+    let sourceBmp = frame.CreateBitmap() |> tryConvertBitmapToRGB
+    let source = BlitSource (sourceBmp, Some bgcolor)
     let destination = BlitDestination (sheet, Point(x, 0))
     tryBlit source destination |> ignore
     x + frame.Width
