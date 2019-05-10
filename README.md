@@ -76,6 +76,9 @@ A: The flip applied to each and every frame.
  ```
  galesheet.exe --flip=H --flip=V *.gal
  ```
+Q: I get a parsing error
+
+A: Try using the flags and options in the order listed in the usage text
 
 ## Acknowledgements
 
