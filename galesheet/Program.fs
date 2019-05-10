@@ -16,10 +16,11 @@ GaleSheet:
 
 Usage:
     galesheet [--version]
-    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] <path>
+    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
 
 Options:
     --version                 Show version.
+    --flip=<flip>             Flips frames, H orizontal and/or V ertically [default: none].
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
@@ -189,8 +190,9 @@ let tryBlit (source:BlitSource) (destination:BlitDestination) =
         printfn "%A" error
         error
 
-let blitFrame (sheet:Bitmap) (bgcolor:Color) (x:int) (frame:Frame) =
+let blitFrame (sheet:Bitmap) (bgcolor:Color) (flipValue:RotateFlipType) (x:int) (frame:Frame) =
     let sourceBmp = frame.CreateBitmap() |> tryConvertBitmapToRGB
+    sourceBmp.RotateFlip flipValue |> ignore
     let source = BlitSource (sourceBmp, Some bgcolor)
     let destination = BlitDestination (sheet, Point(x, 0))
     tryBlit source destination |> ignore
@@ -243,6 +245,13 @@ let main argv =
                 | true, v    -> Palette v
                 | false, _   -> failwith "Argument error! Palette should be: 1 <= colors <= 256"
 
+        let flipValue =
+            match DocoptResult.tryGetArguments "--flip" parsedArguments with
+            | Some [ "H" ] -> RotateFlipType.RotateNoneFlipX
+            | Some [ "V" ] -> RotateFlipType.RotateNoneFlipY
+            | Some [ "H"; "V"] | Some [ "V"; "H"] -> RotateFlipType.RotateNoneFlipXY
+            | _ -> RotateFlipType.RotateNoneFlipNone
+
         let files = !! pathValue
 
         let mutable strips = List.empty
@@ -264,7 +273,7 @@ let main argv =
             // convert frames to strips
 
             go.Frames 
-                |> Array.fold (blitFrame strip bgColor) 0
+                |> Array.fold (blitFrame strip bgColor flipValue) 0
                 |> ignore
 
             strips <- strip::strips
