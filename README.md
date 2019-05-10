@@ -62,8 +62,8 @@ A: This is how I use it.
 1. Go to the `galesheet\bin\Debug\net461` directory
 1. Right click on `galesheet.exe` and `Create shortcut`
 1. Move the shortcut `.lnk` to somewhere so its in the Windows %PATH%
-1. Create a `.bat` file in a folder containing your animations like this one:
-    ```bat
+1. Create a `.cmd` file in a folder containing your animations like this one:
+    ```cmd
     galesheet.exe.lnk --destination="%CD%\spritesheet.png" "%CD%\*.gal"
     ```
 1. Double click on it to begin the process
