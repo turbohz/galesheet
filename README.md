@@ -8,11 +8,13 @@ A tool to convert a [Graphics Gale](https://graphicsgale.com/us/) animation to a
 GaleSheet: 
     A tool to create sprite sheets from Graphics Gale .gal files
 
-Usage: 
-    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] <path>
+Usage:
+    galesheet [--version]
+    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
 
 Options:
     --version                 Show version.
+    --flip=<flip>             Flips frames, H orizontal and/or V ertically [default: none].
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
