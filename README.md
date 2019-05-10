@@ -68,6 +68,15 @@ A: This is how I use it.
     ```
 1. Double click on it to begin the process
 
+Q: How does `--flip` work? Can I flip in both axis?
+
+A: The flip applied to each and every frame.
+
+ Add one or two flips separately, like this  (order does not matter): 
+ ```
+ galesheet.exe --flip=H --flip=V *.gal
+ ```
+
 ## Acknowledgements
 
 This tool also uses a C# wrapper to the `dll` provided by [SebaGames](https://twitter.com/sebagamesdev).
