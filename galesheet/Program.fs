@@ -316,4 +316,4 @@ let main argv =
         0
     
     with
-    | e ->  printfn "%s" e.Message; printfn "%s" DOC; 1
+    | e ->  printfn "%s" e.Message; printfn "%s" e.StackTrace; printfn "%s" DOC; 1
