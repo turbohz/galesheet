@@ -84,7 +84,7 @@ open Microsoft.FSharp.NativeInterop
 
 // serialize a bitmap as png
 let toFile (name : string) (bmp: Bitmap) =
-    bmp.Save(name, Imaging.ImageFormat.Png) |> ignore
+    bmp.Save(name, ImageFormat.Png) |> ignore
     bmp
 
 let showInfo (go:GaleObject) =
@@ -129,7 +129,7 @@ let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
         // map data to an array. We can't use GetPixel() because it 
         // returns a color, not the palette index value :(
 
-        let convertedBmp = new Bitmap(originalBmp.Width, originalBmp.Height, PixelFormat.Format32bppRgb)
+        let convertedBmp = new Bitmap(originalBmp.Width, originalBmp.Height, PixelFormat.Format24bppRgb)
         let bounds = Rectangle(0,0,originalBmp.Width,originalBmp.Height)
         let maxY = bounds.Bottom-1
         let bmpData = originalBmp.LockBits(bounds, ImageLockMode.ReadOnly, originalBmp.PixelFormat)
@@ -326,7 +326,7 @@ let main argv =
 
         printfn "Result sheet is %ix%i" sheetWidth sheetHeight
 
-        let sheet = new Bitmap(sheetWidth, sheetHeight)
+        let sheet = new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format24bppRgb)
 
         strips
             |> List.fold (blitStrip sheet) 0
