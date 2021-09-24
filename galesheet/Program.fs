@@ -24,6 +24,7 @@ Options:
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
+    --channel=<channel>       Choose the channel (R,G, or B) to store the pixel palette index [default: R].
 """
 
 [<Literal>]
@@ -40,6 +41,11 @@ type Destination =
 type ColorFormat =
     | FullColor
     | Palette of uint8
+
+type Channel =
+    | R
+    | G
+    | B
 
 module BitColor =
 
@@ -114,7 +120,7 @@ type BlitDestination =
         match self with
         | BlitDestination (bitmap,_) -> bitmap
 
-let tryConvertBitmapToRGB (originalBmp:Bitmap) : Bitmap =
+let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
 
     match originalBmp.PixelFormat with
     | PixelFormat.Format32bppArgb | PixelFormat.Format24bppRgb -> originalBmp
@@ -145,7 +151,13 @@ let tryConvertBitmapToRGB (originalBmp:Bitmap) : Bitmap =
         originalBmp.UnlockBits bmpData
         
         let originalPalette = originalBmp.Palette.Entries
-        let palette = originalPalette |> Array.mapi (fun i c -> Color.FromArgb(int c.R, int c.G, i))
+        let updatedColor channel v (c:Color) =
+            match channel with
+            | R -> Color.FromArgb(int v, int c.G, int c.B)
+            | G -> Color.FromArgb(int c.R, int v, int c.B)
+            | B -> Color.FromArgb(int c.R, int c.G, int v)
+
+        let palette = originalPalette |> Array.mapi (updatedColor c)
 
         values |> Array.iteri (fun i v -> 
             // remember, the rows in values are from bottom to top
@@ -190,8 +202,8 @@ let tryBlit (source:BlitSource) (destination:BlitDestination) =
         printfn "%A" error
         error
 
-let blitFrame (sheet:Bitmap) (bgcolor:Color) (flipValue:RotateFlipType) (x:int) (frame:Frame) =
-    let sourceBmp = frame.CreateBitmap() |> tryConvertBitmapToRGB
+let blitFrame (sheet:Bitmap) (bgcolor:Color) (flipValue:RotateFlipType) (c:Channel) (x:int) (frame:Frame) =
+    let sourceBmp = frame.CreateBitmap() |> (tryConvertBitmapToRGB c)
     // NOTICE: We want to preserve frame order
     // That's why we flip frame by frame
     sourceBmp.RotateFlip flipValue |> ignore
@@ -256,6 +268,14 @@ let main argv =
          
         // Begin animation files processing
 
+        let channelValue = 
+            match DocoptResult.tryGetArgument "--channel" parsedArguments with
+            | Some "R" -> R
+            | Some "G" -> G
+            | Some "B" -> B
+            | None
+            | _ -> failwith "Unexpected error: Channel option should have a default"
+
         let files = !! pathValue
 
         let mutable strips = List.empty
@@ -277,7 +297,7 @@ let main argv =
             // convert frames to strips
 
             go.Frames 
-                |> Array.fold (blitFrame strip bgColor flipValue) 0
+                |> Array.fold (blitFrame strip bgColor flipValue channelValue) 0
                 |> ignore
 
             strips <- strip::strips
