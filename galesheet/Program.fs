@@ -192,6 +192,8 @@ let tryBlit (source:BlitSource) (destination:BlitDestination) =
 
 let blitFrame (sheet:Bitmap) (bgcolor:Color) (flipValue:RotateFlipType) (x:int) (frame:Frame) =
     let sourceBmp = frame.CreateBitmap() |> tryConvertBitmapToRGB
+    // NOTICE: We want to preserve frame order
+    // That's why we flip frame by frame
     sourceBmp.RotateFlip flipValue |> ignore
     let source = BlitSource (sourceBmp, Some bgcolor)
     let destination = BlitDestination (sheet, Point(x, 0))
@@ -251,6 +253,8 @@ let main argv =
             | Some [ "V" ] -> RotateFlipType.RotateNoneFlipY
             | Some [ "H"; "V"] | Some [ "V"; "H"] -> RotateFlipType.RotateNoneFlipXY
             | _ -> RotateFlipType.RotateNoneFlipNone
+         
+        // Begin animation files processing
 
         let files = !! pathValue
 
