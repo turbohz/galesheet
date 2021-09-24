@@ -18,6 +18,7 @@ Options:
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
+    --channel=<channel>       Choose the channel (R,G, or B) to store the pixel palette index [default: R].
 ```
 
 This tool will take a number of `.gal` (as many as the glob pattern matches), and generate
@@ -48,7 +49,7 @@ The program accepts multiple `.gal` files, in the **same** format.
 
 In both cases, the output is 32 bpp `.png` file.
 In the former, the background color will be made **transparent**.
-In the latter, the palette **index** will be the stored in the BLUE component.
+In the latter, the palette **index** will be the stored in the specified color channel (Blue by default).
 
 > The idea is that you'll use some kind of pixel shader to adjust the pixels to the right color
 
@@ -70,9 +71,11 @@ A: This is how I use it.
 
 Q: How does `--flip` work? Can I flip in both axis?
 
-A: The flip applied to each and every frame.
+A: The flip gets applied to each and every frame.
+ The idea is to keep the order of the frames. For that reason, 
+ it's not applied to neither the animation strip nor final sprite sheet.
 
- Add one or two flips separately, like this  (order does not matter): 
+ You can specify one or two flips separately, like this (order does not matter): 
  ```
  galesheet.exe --flip=H --flip=V *.gal
  ```
