@@ -1,8 +1,10 @@
 RESTRICTION: == net461
 NUGET
   remote: https://www.nuget.org/api/v2
-    FAKE.Lib (5.8.4)
-    FParsec (1.0.3)
-      FSharp.Core (>= 4.0.0.1)
-    FSharp.Core (4.6.2)
-    System.Drawing.Common (4.5.1)
+    FAKE.Lib (5.16)
+    FParsec (1.1.1)
+      FSharp.Core (>= 4.3.4)
+      System.ValueTuple (>= 4.4)
+    FSharp.Core (6.0)
+    System.Drawing.Common (5.0.2)
+    System.ValueTuple (4.5)

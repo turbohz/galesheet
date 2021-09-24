@@ -4,5 +4,4 @@ cache ./nupkgs versions: current
 framework: net461
 nuget Fake.Lib
 nuget FParsec
-nuget FSharp.Core
 nuget System.Drawing.Common

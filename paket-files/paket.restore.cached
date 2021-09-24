@@ -1,8 +1,4 @@
-RESTRICTION: == net461
-NUGET
-  remote: https://www.nuget.org/api/v2
-    FAKE.Lib (5.8.4)
-    FParsec (1.0.3)
-      FSharp.Core (>= 4.0.0.1)
-    FSharp.Core (4.6.2)
-    System.Drawing.Common (4.5.1)
+{
+  "packagesDownloadedHash": "393435C7088C10C2A8AB1CC8C0243C2A8954D5DBD3E3A8F04BC48D5EA7DE0390",
+  "projectsRestoredHash": "393435C7088C10C2A8AB1CC8C0243C2A8954D5DBD3E3A8F04BC48D5EA7DE0390"
+}
