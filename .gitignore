@@ -6,3 +6,6 @@ nupkgs/
 galesheet/assets/
 .vs
 paket-files/paket.restore.cached
+
+.fake
+.ionide
