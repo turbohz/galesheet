@@ -2,17 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <UICulture>en-US</UICulture>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <NoWarn>9</NoWarn>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Runtime" />
-    <Reference Include="Fake" />
-    <Reference Include="FParsec" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\galefile\galefile.csproj">
       <Name>galefile.csproj</Name>

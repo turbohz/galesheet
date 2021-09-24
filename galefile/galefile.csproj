@@ -1,22 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <UICulture>en-US</UICulture>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <AssemblyName>GraphicsGaleWrapper</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
-    <Reference Include="System.Drawing.Common">
-      <HintPath>..\packages\System.Drawing.Common\lib\net461\System.Drawing.Common.dll</HintPath>
-      <Private>True</Private>
-      <Paket>True</Paket>
-    </Reference>
     <Content Include="galefile.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

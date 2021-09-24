@@ -1,7 +1,7 @@
-source https://www.nuget.org/api/v2
-cache ./nupkgs versions: current
+source https://api.nuget.org/v3/index.json
 
-framework: net461
+storage: none
+framework: net472
 nuget Fake.Lib
 nuget FParsec
 nuget System.Drawing.Common
