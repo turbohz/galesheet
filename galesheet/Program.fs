@@ -144,15 +144,15 @@ let tryConvertBitmapToRGB (originalBmp:Bitmap) : Bitmap =
         System.Runtime.InteropServices.Marshal.Copy(ptr |> NativePtr.toNativeInt , values, 0, bytes);
         originalBmp.UnlockBits bmpData
         
-        let palette = originalBmp.Palette.Entries
+        let originalPalette = originalBmp.Palette.Entries
+        let palette = originalPalette |> Array.mapi (fun i c -> Color.FromArgb(int c.R, int c.G, i))
 
         values |> Array.iteri (fun i v -> 
             // remember, the rows in values are from bottom to top
             let x = i % stride
             let y = maxY - (i / stride)
-            // use BLUE component to store the palette index value
-            // set REST of components to their color value from palette 
-            let c = Color.FromArgb(int palette.[int v].R, int palette.[int v].G, int v)
+            let c = palette.[int v] 
+
             try 
                 convertedBmp.SetPixel(x,y,c)
             with 
