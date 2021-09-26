@@ -120,6 +120,12 @@ type BlitDestination =
         match self with
         | BlitDestination (bitmap,_) -> bitmap
 
+let colorWithPaletteIndexInChannel channel v (c:Color) =
+    match channel with
+    | R -> Color.FromArgb(int v, int c.G, int c.B)
+    | G -> Color.FromArgb(int c.R, int v, int c.B)
+    | B -> Color.FromArgb(int c.R, int c.G, int v)
+
 let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
 
     match originalBmp.PixelFormat with
@@ -151,13 +157,7 @@ let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
         originalBmp.UnlockBits bmpData
         
         let originalPalette = originalBmp.Palette.Entries
-        let updatedColor channel v (c:Color) =
-            match channel with
-            | R -> Color.FromArgb(int v, int c.G, int c.B)
-            | G -> Color.FromArgb(int c.R, int v, int c.B)
-            | B -> Color.FromArgb(int c.R, int c.G, int v)
-
-        let palette = originalPalette |> Array.mapi (updatedColor c)
+        let palette = originalPalette |> Array.mapi (colorWithPaletteIndexInChannel c)
 
         values |> Array.iteri (fun i v -> 
             // remember, the rows in values are from bottom to top
