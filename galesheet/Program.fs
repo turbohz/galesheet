@@ -1,4 +1,4 @@
-﻿// Learn more about F# at http://fsharp.org
+// Learn more about F# at http://fsharp.org
 
 open GraphicsGaleWrapper
 open System.Drawing
@@ -75,7 +75,7 @@ module BitColor =
         |> List.map byte2Hex
         |> List.reduce (+)
 
-    let makeOpaque (c:Color) : Color = Color.FromArgb (c.ToArgb() ||| 0xFF000000)
+    let makeOpaque (c:Color) : Color = Color.FromArgb (255, c)
 
 open BitColor
 open System
