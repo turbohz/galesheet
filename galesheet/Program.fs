@@ -1,4 +1,4 @@
-﻿// Learn more about F# at http://fsharp.org
+// Learn more about F# at http://fsharp.org
 
 open GraphicsGaleWrapper
 open System.Drawing
@@ -75,7 +75,7 @@ module BitColor =
         |> List.map byte2Hex
         |> List.reduce (+)
 
-    let makeOpaque (c:Color) : Color = Color.FromArgb (c.ToArgb() ||| 0xFF000000)
+    let makeOpaque (c:Color) : Color = Color.FromArgb (255, c)
 
 open BitColor
 open System
@@ -120,6 +120,12 @@ type BlitDestination =
         match self with
         | BlitDestination (bitmap,_) -> bitmap
 
+let colorWithPaletteIndexInChannel channel v (c:Color) =
+    match channel with
+    | R -> Color.FromArgb(int v, int c.G, int c.B)
+    | G -> Color.FromArgb(int c.R, int v, int c.B)
+    | B -> Color.FromArgb(int c.R, int c.G, int v)
+
 let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
 
     match originalBmp.PixelFormat with
@@ -151,13 +157,7 @@ let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
         originalBmp.UnlockBits bmpData
         
         let originalPalette = originalBmp.Palette.Entries
-        let updatedColor channel v (c:Color) =
-            match channel with
-            | R -> Color.FromArgb(int v, int c.G, int c.B)
-            | G -> Color.FromArgb(int c.R, int v, int c.B)
-            | B -> Color.FromArgb(int c.R, int c.G, int v)
-
-        let palette = originalPalette |> Array.mapi (updatedColor c)
+        let palette = originalPalette |> Array.mapi (colorWithPaletteIndexInChannel c)
 
         values |> Array.iteri (fun i v -> 
             // remember, the rows in values are from bottom to top
@@ -217,6 +217,12 @@ let blitStrip (sheet:Bitmap) (y:int) (strip:Bitmap) =
     let destination = BlitDestination (sheet, Point(0, y))
     tryBlit source destination |> ignore
     y + strip.Height
+
+let solidColorBitmap (c:Color) (b:Bitmap) =
+    for x in 0..(b.Size.Width - 1) do
+        for y in 0..(b.Size.Height - 1) do
+            b.SetPixel(x,y,c)
+    b
 
 [<EntryPoint>]
 let main argv =
@@ -280,6 +286,7 @@ let main argv =
 
         let mutable strips = List.empty
         let mutable palette = Array.zeroCreate<Color> 0
+        let mutable bgColor = Color.Transparent
 
         for file in Seq.rev files do
 
@@ -292,7 +299,7 @@ let main argv =
             let strip = new Bitmap(go.Width*go.FrameCount, go.Height)
             printfn "%A" strip.Size
             
-            let bgColor = go.BackgroundColor |> Color.FromArgb |> makeOpaque
+            bgColor <- go.BackgroundColor |> Color.FromArgb |> makeOpaque
 
             // convert frames to strips
 
@@ -325,8 +332,9 @@ let main argv =
         let sheetHeight = strips |> List.sumBy (fun s -> s.Height)
 
         printfn "Result sheet is %ix%i" sheetWidth sheetHeight
-
-        let sheet = new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format24bppRgb)
+        
+        let convertedBGColor = colorWithPaletteIndexInChannel channelValue 0 bgColor
+        let sheet = (solidColorBitmap convertedBGColor) <| new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format24bppRgb)
 
         strips
             |> List.fold (blitStrip sheet) 0
