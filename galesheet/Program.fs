@@ -280,6 +280,7 @@ let main argv =
 
         let mutable strips = List.empty
         let mutable palette = Array.zeroCreate<Color> 0
+        let mutable bgColor = Color.Transparent
 
         for file in Seq.rev files do
 
@@ -292,7 +293,7 @@ let main argv =
             let strip = new Bitmap(go.Width*go.FrameCount, go.Height)
             printfn "%A" strip.Size
             
-            let bgColor = go.BackgroundColor |> Color.FromArgb |> makeOpaque
+            bgColor <- go.BackgroundColor |> Color.FromArgb |> makeOpaque
 
             // convert frames to strips
 
