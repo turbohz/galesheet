@@ -218,6 +218,12 @@ let blitStrip (sheet:Bitmap) (y:int) (strip:Bitmap) =
     tryBlit source destination |> ignore
     y + strip.Height
 
+let solidColorBitmap (c:Color) (b:Bitmap) =
+    for x in 0..(b.Size.Width - 1) do
+        for y in 0..(b.Size.Height - 1) do
+            b.SetPixel(x,y,c)
+    b
+
 [<EntryPoint>]
 let main argv =
 
@@ -326,8 +332,9 @@ let main argv =
         let sheetHeight = strips |> List.sumBy (fun s -> s.Height)
 
         printfn "Result sheet is %ix%i" sheetWidth sheetHeight
-
-        let sheet = new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format24bppRgb)
+        
+        let convertedBGColor = colorWithPaletteIndexInChannel channelValue 0 bgColor
+        let sheet = (solidColorBitmap convertedBGColor) <| new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format24bppRgb)
 
         strips
             |> List.fold (blitStrip sheet) 0
