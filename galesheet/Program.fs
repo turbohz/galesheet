@@ -15,16 +15,19 @@ GaleSheet:
     A tool to create sprite sheets from Graphics Gale .gal files
 
 Usage:
-    galesheet [--version]
-    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
+    galesheet version
+    galesheet encode (-r|-g|-b|-a) [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
+    galesheet encode --rgb [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
 
 Options:
-    --version                 Show version.
     --flip=<flip>             Flips frames, H orizontal and/or V ertically [default: none].
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
-    --channel=<channel>       Choose the channel (R,G, or B) to store the pixel palette index [default: R].
+    --rgb                     Encode palette entries 1,2,3 as value 255 in r,g,b, and entry 0 as 0 in rgb.
+    -r                        Encode palette entry in the red component.
+    -g                        Encode palette entry in the green component.
+    -b                        Encode palette entry in the blue component.
 """
 
 [<Literal>]
@@ -46,6 +49,10 @@ type Channel =
     | R
     | G
     | B
+
+type Encoding = 
+    | Value of Channel // store as a fraction in a given channel
+    | Components       // store as 255 in the corresponding channel (A=0...R=3)
 
 module BitColor =
 
@@ -120,13 +127,26 @@ type BlitDestination =
         match self with
         | BlitDestination (bitmap,_) -> bitmap
 
-let colorWithPaletteIndexInChannel channel v (c:Color) =
+let colorWithPaletteEntryInChannel channel entry (c:Color) =
     match channel with
-    | R -> Color.FromArgb(int v, int c.G, int c.B)
-    | G -> Color.FromArgb(int c.R, int v, int c.B)
-    | B -> Color.FromArgb(int c.R, int c.G, int v)
+    | R -> Color.FromArgb(int entry , int c.G   , int c.B  )
+    | G -> Color.FromArgb(int c.R   , int entry , int c.B  )
+    | B -> Color.FromArgb(int c.R   , int c.G   , int entry)
 
-let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
+let colorWithEntryInComponent entry (c:Color) =
+    match entry with
+        | 0 -> Color.FromArgb( 0 , 0 , 0 , 0 )
+        | 1 -> Color.FromArgb( 0 ,255, 0 , 0 )
+        | 2 -> Color.FromArgb( 0 , 0 ,255, 0 )
+        | 3 -> Color.FromArgb( 0 , 0 , 0 ,255)
+        | _ -> Color.Transparent
+
+let encoder encoding = 
+    match encoding with
+    | Value channel -> colorWithPaletteEntryInChannel channel
+    | Components -> colorWithEntryInComponent
+
+let tryConvertBitmapToRGB (encoding:Encoding) (originalBmp:Bitmap): Bitmap =
 
     match originalBmp.PixelFormat with
     | PixelFormat.Format32bppArgb | PixelFormat.Format24bppRgb -> originalBmp
@@ -155,9 +175,10 @@ let tryConvertBitmapToRGB (c:Channel) (originalBmp:Bitmap): Bitmap =
         let values:uint8[] =  Array.zeroCreate<uint8> bytes
         System.Runtime.InteropServices.Marshal.Copy(ptr |> NativePtr.toNativeInt , values, 0, bytes);
         originalBmp.UnlockBits bmpData
-        
-        let originalPalette = originalBmp.Palette.Entries
-        let palette = originalPalette |> Array.mapi (colorWithPaletteIndexInChannel c)
+
+        // Generate new palette value with the encoded ARGB values
+
+        let palette = originalBmp.Palette.Entries |> Array.mapi (encoder encoding)
 
         values |> Array.iteri (fun i v -> 
             // remember, the rows in values are from bottom to top
@@ -202,8 +223,8 @@ let tryBlit (source:BlitSource) (destination:BlitDestination) =
         printfn "%A" error
         error
 
-let blitFrame (sheet:Bitmap) (bgcolor:Color) (flipValue:RotateFlipType) (c:Channel) (x:int) (frame:Frame) =
-    let sourceBmp = frame.CreateBitmap() |> (tryConvertBitmapToRGB c)
+let blitFrame (sheet:Bitmap) (bgcolor:Color) (flipValue:RotateFlipType) (encoding:Encoding) (x:int) (frame:Frame) =
+    let sourceBmp = frame.CreateBitmap() |> (tryConvertBitmapToRGB encoding)
     // NOTICE: We want to preserve frame order
     // That's why we flip frame by frame
     sourceBmp.RotateFlip flipValue |> ignore
@@ -233,31 +254,30 @@ let main argv =
 
     try
         
-        let parsedArguments = command.Parse(argv)
-        printfn "Arguments: %A" parsedArguments
-
-        let showVersion =  DocoptResult.hasFlag "--version" parsedArguments
+        let docopts = command.Parse(argv)
         
-        if showVersion then failwith (sprintf "%s" VERSION)
+        if (DocoptResult.hasFlag "version" docopts) then failwith (sprintf "%s" VERSION)
+        
+        // command is "encode", otherwise Parse fails
 
         let pathValue = 
-            match DocoptResult.tryGetArgument "<path>" parsedArguments with
+            match DocoptResult.tryGetArgument "<path>" docopts with
             | Some path -> path
             | _ -> failwith "A path (or glob) is required"
                 
         let widthValue =  
-            match DocoptResult.tryGetArgument "--width" parsedArguments with
+            match DocoptResult.tryGetArgument "--width" docopts with
             | Some "AUTO"
             | None -> Width.Auto
             | Some w -> Width.Fixed (int w)
 
         let destinationValue =
-            match DocoptResult.tryGetArgument "--destination" parsedArguments with
+            match DocoptResult.tryGetArgument "--destination" docopts with
             | None -> failwith "Unexpected error: Destination filename should have a default"
             | Some filename -> filename
 
         let paletteValue =
-            match DocoptResult.tryGetArgument "--palette" parsedArguments with
+            match DocoptResult.tryGetArgument "--palette" docopts with
             | None -> failwith "Unexpected error: Palette option should have a default"
             | Some "none" -> FullColor
             | Some value -> 
@@ -266,21 +286,24 @@ let main argv =
                 | false, _   -> failwith "Argument error! Palette should be: 1 <= colors <= 256"
 
         let flipValue =
-            match DocoptResult.tryGetArguments "--flip" parsedArguments with
+            match DocoptResult.tryGetArguments "--flip" docopts with
             | Some [ "H" ] -> RotateFlipType.RotateNoneFlipX
             | Some [ "V" ] -> RotateFlipType.RotateNoneFlipY
             | Some [ "H"; "V"] | Some [ "V"; "H"] -> RotateFlipType.RotateNoneFlipXY
             | _ -> RotateFlipType.RotateNoneFlipNone
-         
-        // Begin animation files processing
+        
+        let encoding = 
+            if DocoptResult.hasFlag "--rgb" docopts then
+                Encoding.Components
+            else
+                match ["-r";"-g";"-b"] |> List.map(fun f -> DocoptResult.hasFlag f docopts) with
+                | [true ;false;false] -> Encoding.Value Channel.R
+                | [false;true ;false] -> Encoding.Value Channel.G
+                | _ -> Encoding.Value Channel.B
 
-        let channelValue = 
-            match DocoptResult.tryGetArgument "--channel" parsedArguments with
-            | Some "R" -> R
-            | Some "G" -> G
-            | Some "B" -> B
-            | None
-            | _ -> failwith "Unexpected error: Channel option should have a default"
+        printf "Using encoding: %A" encoding
+
+        // Begin animation files processing
 
         let files = !! pathValue
 
@@ -304,7 +327,7 @@ let main argv =
             // convert frames to strips
 
             go.Frames 
-                |> Array.fold (blitFrame strip bgColor flipValue channelValue) 0
+                |> Array.fold (blitFrame strip bgColor flipValue encoding) 0
                 |> ignore
 
             strips <- strip::strips
@@ -333,7 +356,7 @@ let main argv =
 
         printfn "Result sheet is %ix%i" sheetWidth sheetHeight
         
-        let convertedBGColor = colorWithPaletteIndexInChannel channelValue 0 bgColor
+        let convertedBGColor = (encoder encoding) 0 bgColor
         let sheet = (solidColorBitmap convertedBGColor) <| new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format24bppRgb)
 
         strips
