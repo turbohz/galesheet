@@ -9,22 +9,23 @@ GaleSheet:
     A tool to create sprite sheets from Graphics Gale .gal files
 
 Usage:
-    galesheet [--version]
-    galesheet [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
+    galesheet version
+    galesheet encode (-r|-g|-b|-a) [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
+    galesheet encode --rgb [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
 
 Options:
-    --version                 Show version.
     --flip=<flip>             Flips frames, H orizontal and/or V ertically [default: none].
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
-    --channel=<channel>       Choose the channel (R,G, or B) to store the pixel palette index [default: R].
+    --rgb                     Encode palette entries 1,2,3 as value 255 in r,g,b, and entry 0 as 0 in rgb.
+    -r                        Encode palette entry in the red component.
+    -g                        Encode palette entry in the green component.
+    -b                        Encode palette entry in the blue component.
 ```
 
 This tool will take a number of `.gal` (as many as the glob pattern matches), and generate
 a single `.png` sprite sheet, with each `.gal` animation being an horizontal stripe.
-
-It will also make the `.gal` animation backgroud color transparent.
 
 In `--width=AUTO` mode, the sprite sheet will be made as wide as the longest animation strip.
 
@@ -47,9 +48,9 @@ The program accepts multiple `.gal` files, in the **same** format.
 - 24 bits per pixel (full color)
 - 8 bits per pixel (palette)
 
-In both cases, the output is 32 bpp `.png` file.
-In the former, the background color will be made **transparent**.
-In the latter, the palette **index** will be the stored in the specified color channel (Blue by default).
+In both cases, the output is a 24 bpp `.png` file.
+
+In palette mode, there are two options for encoding the palette entry, by value in a single channel, per component. 
 
 > The idea is that you'll use some kind of pixel shader to adjust the pixels to the right color
 
