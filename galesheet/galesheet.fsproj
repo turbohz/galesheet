@@ -18,5 +18,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Fake.Core.CommandLineParsing" Version="5.20.4" />
+    <PackageReference Include="Fake.IO.FileSystem" Version="5.20.4" />
+  </ItemGroup>
 </Project>
