@@ -10,18 +10,24 @@ GaleSheet:
 
 Usage:
     galesheet version
-    galesheet encode (-r|-g|-b|-a) [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
-    galesheet encode --rgb [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
+    galesheet encode [--method=<method>] [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
 
 Options:
     --flip=<flip>             Flips frames, H orizontal and/or V ertically [default: none].
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
-    --rgb                     Encode palette entries 1,2,3 as value 255 in r,g,b, and entry 0 as 0 in rgb.
-    -r                        Encode palette entry in the red component.
-    -g                        Encode palette entry in the green component.
-    -b                        Encode palette entry in the blue component.
+    --method=<method>         Selects the palette entry encoding method [default: rgb]:
+
+                                - rgb : Encode 4 entries -- 1,2,3 as value 255 in r,g,b, and entry 0 as all zeroes.
+                                - r|g|b : Encode entries in a single component (units being 256/palette size).
+                                - bits : Encode up to 8 entries, by interpreting the rgb components as 3 bits (component > 0 means bit set)
+    
+    --rgb                     DEPRECATED: See --method
+    -r                        DEPRECATED: See --method
+    -g                        DEPRECATED: See --method
+    -b                        DEPRECATED: See --method
+
 ```
 
 This tool will take a number of `.gal` (as many as the glob pattern matches), and generate

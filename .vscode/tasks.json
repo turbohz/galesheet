@@ -16,7 +16,7 @@
         {
             "label": "run",
             "command": "dotnet",
-            "args": ["run", "--palette=4", "assets\\test\\*.gal"],
+            "args": ["run", "encode",  "--method=bits", "assets\\test\\*.gal"],
             "options": {
                 "cwd": "${workspaceFolder}/galesheet"
             },

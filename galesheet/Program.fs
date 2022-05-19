@@ -16,19 +16,26 @@ GaleSheet:
 
 Usage:
     galesheet version
-    galesheet encode (-r|-g|-b|-a) [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
-    galesheet encode --rgb [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
+    galesheet encode [--method=<method>] [--width=<width>] [--destination=<filename>] [--palette=<colors>] ([--flip=<flip>] ...) <path>
 
 Options:
     --flip=<flip>             Flips frames, H orizontal and/or V ertically [default: none].
     --width=<width>           Set sheet width [default: AUTO].
     --palette=<colors>        Save "palette" data of the given size [default: none].
     --destination=<filename>  Destination filename [default: spritesheet.png].
-    --rgb                     Encode palette entries 1,2,3 as value 255 in r,g,b, and entry 0 as 0 in rgb.
-    -r                        Encode palette entry in the red component.
-    -g                        Encode palette entry in the green component.
-    -b                        Encode palette entry in the blue component.
+    --method=<method>         Selects the palette entry encoding method [default: rgb]:
+
+                                - rgb : Encode 4 entries -- 1,2,3 as value 255 in r,g,b, and entry 0 as all zeroes.
+                                - r|g|b : Encode entries in a single component (units being 256/palette size).
+                                - bits : Encode up to 8 entries, by interpreting the rgb components as 3 bits (component > 0 means bit set)
+    
+    --rgb                     DEPRECATED: See --method
+    -r                        DEPRECATED: See --method
+    -g                        DEPRECATED: See --method
+    -b                        DEPRECATED: See --method
+
 """
+
 
 [<Literal>]
 let DEFAULT_DESTINATION = "spritesheet.png"
@@ -53,7 +60,7 @@ type Channel =
 type Encoding = 
     | Value of Channel // store as a fraction in a given channel
     | Components       // store as 255 in the corresponding channel (A=0...R=3)
-
+    | Bits             // store as a 3 bits binary digit in RGB
 module BitColor =
 
     // color conversion and printing functions
@@ -141,10 +148,25 @@ let colorWithEntryInComponent entry (c:Color) =
         | 3 -> Color.FromArgb( 0 , 0 , 0 ,255)
         | _ -> Color.Transparent
 
+let colorWithEntryAs3Bits (entry:int) (c:Color) =
+    
+    let R_mask = 4 // 100
+    let G_mask = 2 // 010
+    let B_mask = 1 // 001
+    match entry with
+        | entry when entry < 8 -> 
+            Color.FromArgb(0, 
+                (if entry &&& R_mask = R_mask then 255 else 0),
+                (if entry &&& G_mask = G_mask then 255 else 0),
+                (if entry &&& B_mask = B_mask then 255 else 0)
+            )
+        | _ -> Color.Transparent
+
 let encoder encoding = 
     match encoding with
     | Value channel -> colorWithPaletteEntryInChannel channel
     | Components -> colorWithEntryInComponent
+    | Bits -> colorWithEntryAs3Bits
 
 let tryConvertBitmapToRGB (encoding:Encoding) (originalBmp:Bitmap): Bitmap =
 
@@ -184,8 +206,8 @@ let tryConvertBitmapToRGB (encoding:Encoding) (originalBmp:Bitmap): Bitmap =
             // remember, the rows in values are from bottom to top
             let x = i % stride
             let y = maxY - (i / stride)
-            let c = palette.[int v] 
-
+            let c = palette.[int v]
+            
             try 
                 convertedBmp.SetPixel(x,y,c)
             with 
@@ -293,13 +315,13 @@ let main argv =
             | _ -> RotateFlipType.RotateNoneFlipNone
         
         let encoding = 
-            if DocoptResult.hasFlag "--rgb" docopts then
-                Encoding.Components
-            else
-                match ["-r";"-g";"-b"] |> List.map(fun f -> DocoptResult.hasFlag f docopts) with
-                | [true ;false;false] -> Encoding.Value Channel.R
-                | [false;true ;false] -> Encoding.Value Channel.G
-                | _ -> Encoding.Value Channel.B
+            match DocoptResult.tryGetArguments "--method" docopts with
+            | Some [ "r" ] -> Encoding.Value Channel.R
+            | Some [ "g" ] -> Encoding.Value Channel.G
+            | Some [ "b" ] -> Encoding.Value Channel.B
+            | Some [ "components" ] -> Encoding.Components
+            | Some [ "bits" ] -> Encoding.Bits
+            | _ -> Encoding.Components
 
         printf "Using encoding: %A" encoding
 
